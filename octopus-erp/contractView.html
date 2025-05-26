@@ -46,8 +46,8 @@
                         </el-row>
                         <el-row :gutter="20">
                             <el-col :span="8">
-                                <el-form-item label="供应商名称" prop="supplierName">
-                                    <el-select v-model="baseInfo.supplierName" placeholder="请选择供应商名称" :loading="loadingSuppliers" style="width: 100%;" :disabled="formDisabled">
+                                <el-form-item label="供应商名称" prop="supplierId">
+                                    <el-select v-model="baseInfo.supplierId" placeholder="请选择供应商名称" :loading="supplierOptionsLoading" style="width: 100%;" :disabled="formDisabled" filterable>
                                       <!-- 供应商名称选项，根据实际情况动态填充 -->
                                         <el-option
                                             v-for="item in supplierOptions"
@@ -66,7 +66,7 @@
                             </el-col>
                              <el-col :span="8">
                                 <el-form-item label="合同主体" prop="contractSubject">
-                                    <el-select v-model="baseInfo.contractSubject" placeholder="请选择合同主体" style="width: 100%;" :disabled="formDisabled" :loading="contractSubjectOptionsLoading">
+                                    <el-select v-model="baseInfo.contractSubject" placeholder="请选择合同主体" style="width: 100%;" :disabled="formDisabled" :loading="contractSubjectOptionsLoading" filterable>
                                         <el-option
                                             v-for="item in contractSubjectOptions"
                                             :key="item.value"
@@ -80,7 +80,7 @@
                          <el-row :gutter="20">
                              <el-col :span="8">
                                 <el-form-item label="合同类型" prop="contractType">
-                                    <el-select v-model="baseInfo.contractType" placeholder="请选择合同类型" style="width: 100%;" :disabled="formDisabled">
+                                    <el-select v-model="baseInfo.contractType" placeholder="请选择合同类型" style="width: 100%;" :disabled="formDisabled" filterable>
                                         <el-option
                                             v-for="item in CONTRACT_TYPE_OPTIONS"
                                             :key="item.value"
@@ -93,7 +93,7 @@
                             </el-col>
                              <el-col :span="8">
                                 <el-form-item label="合同来源" prop="contractSource">
-                                    <el-select v-model="baseInfo.contractSource" placeholder="请选择合同来源" style="width: 100%;" :disabled="formDisabled">
+                                    <el-select v-model="baseInfo.contractSource" placeholder="请选择合同来源" style="width: 100%;" :disabled="formDisabled" filterable>
                                         <el-option
                                             v-for="item in CONTRACT_SOURCE_OPTIONS"
                                             :key="item.value"
@@ -131,16 +131,16 @@
                 <div class="contractView__card_content">
                     <el-form :model="termsRules" label-position="top" size="mini">
                         <el-form-item label="结算条款">
-                            <el-input v-model="termsRules.settlementTerms" :rows="1" autosize type="textarea" placeholder="请输入结算条款" :disabled="formDisabled"></el-input>
+                            <el-input v-model="termsRules.calculationTerms" :rows="1" autosize type="textarea" placeholder="请输入结算条款" :disabled="formDisabled"></el-input>
                             </el-form-item>
                         <el-form-item label="业务规则">
                             <el-input v-model="termsRules.businessRules" :rows="1" autosize type="textarea" placeholder="请输入业务规则" :disabled="formDisabled"></el-input>
                             </el-form-item>
                         <el-form-item label="追溯条款">
-                            <el-input v-model="termsRules.traceabilityTerms" :rows="1" autosize type="textarea" placeholder="请输入追溯条款" :disabled="formDisabled"></el-input>
+                            <el-input v-model="termsRules.traceabilityClause" :rows="1" autosize type="textarea" placeholder="请输入追溯条款" :disabled="formDisabled"></el-input>
                             </el-form-item>
                         <el-form-item label="特殊条款">
-                            <el-input v-model="termsRules.specialTerms" :rows="1" autosize type="textarea" placeholder="请输入特殊条款" :disabled="formDisabled"></el-input>
+                            <el-input v-model="termsRules.specialProvisions" :rows="1" autosize type="textarea" placeholder="请输入特殊条款" :disabled="formDisabled"></el-input>
                         </el-form-item>
                     </el-form>    
                 </div>
@@ -196,7 +196,7 @@
 
         <script type="module">
 			import { opUrl, VIEW_SCENE, CONTRACT_TYPE_OPTIONS, CONTRACT_SOURCE_OPTIONS, SUCCESS_CODE } from './js/contants.js';
-            import { getPersonInfoApi, getCompanySubjectApi } from './js/apis.js';
+            import { getPersonInfoApi, getCompanySubjectApi, queryContractListApi, contractSupplierAddApi } from './js/apis.js';
             import { handleOptionShow  } from './js/fn.js';
 
             let app = new Vue({
@@ -210,7 +210,7 @@
                             application: '',
                             directDepartment: '',
                             firstLevelDepartment: '',
-                            supplierName: '',
+                            supplierId: '',
                             contractName: '',
                             contractSubject: '',
                             contractType: '',
@@ -221,6 +221,8 @@
                         companySubjectOptionsLoading: false,
                         contractSubjectOptions: [],
                         contractSubjectOptionsLoading: false,
+                        supplierOptions: [],
+                        supplierOptionsLoading: false,
                         // 基本信息表单验证规则
                         baseInfoRules: {
                             // application: [
@@ -232,7 +234,7 @@
                             // firstLevelDepartment: [
                             //     { required: true, message: '请输入一级部门', trigger: 'blur' }
                             // ],
-                            supplierName: [
+                            supplierId: [
                                 { required: true, message: '请选择供应商名称', trigger: 'change' }
                             ],
                             contractName: [
@@ -253,20 +255,16 @@
                         },
                         // 条款规则类表单数据
                         termsRules: {
-                            settlementTerms: '', // 结算条款
+                            calculationTerms: '', // 结算条款
                             businessRules: '', // 业务规则
-                            traceabilityTerms: '', // 追溯条款
-                            specialTerms: '', // 特殊条款
+                            traceabilityClause: '', // 追溯条款
+                            specialProvisions: '', // 特殊条款
                         },
                         submitLoading: false,
                         // 附件列表数据，根据需要添加，结构应包含 name, url/id 等
                         fileList: [],
-                        // 供应商名称选项数据，根据实际情况动态填充
-                        supplierOptions: [],
-                        loadingSuppliers: false, // 用于控制供应商名称加载状态
                         routeQuery: {},
                         formDisabled: true,
-
                     }
                 },
                 created() {
@@ -274,14 +272,18 @@
                     // this.routeQuery = query;
                     // this.formDisabled = query.pageType !== VIEW_SCENE.ADD;
                     this.routeQuery = {
-                        pageType: VIEW_SCENE.AUDIT,
+                        pageType: VIEW_SCENE.ADD,
                         id: 1,
                     };
                     this.formDisabled = false;
                     // document.title = query.pageType;
 
-                    this.getPersonInfo();
-                    this.getCompanySubject();
+                    // if (query.pageType === VIEW_SCENE.ADD) {
+                    if (true) {
+                        this.getPersonInfo();
+                        this.getCompanySubject();
+                        this.queryContractList();
+                    }
                 },
                 methods: {
                     getPersonInfo() {
@@ -330,18 +332,53 @@
 							}
 						});
                     },
+                    queryContractList() {
+                        this.supplierOptionsLoading = true;
+                        $.ajax({
+							url: queryContractListApi,
+							type: "post",
+							dataType: "json",
+							contentType: "application/json",
+							data: JSON.stringify({}),
+							success: (res) => {
+								if(res.code === SUCCESS_CODE){
+                                    const data = res.data?.list || {};
+                                    
+                                    this.supplierOptions = (data || []).map(item => ({ value: item.supplierId, label: item.supplierName }));
+								}
+							},
+                            complete: () => {                                
+								this.supplierOptionsLoading = false;
+							}
+						});
+                    },
                     onAdd() {
                         // 触发表单验证
                         this.$refs.form.validate((valid) => {
                             if (valid) {
-                                console.log('基本信息验证通过，提交数据:', this.baseInfo);
-                                console.log('条款规则类数据:', this.termsRules);
-                                console.log('附件列表数据:', this.fileList);
-                                // 调用 opener 的方法刷新列表
-                                if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
-                                    window.opener.contractListApp.getList(true);
-                                }
-                                // 在这里处理表单提交逻辑，可以合并 baseInfo, termsRules, fileList 等数据
+                                this.submitLoading = true;
+                                $.ajax({
+                                    url: queryContractListApi,
+                                    type: "post",
+                                    dataType: "json",
+                                    contentType: "application/json",
+                                    data: JSON.stringify({
+                                        ...this.baseInfo,
+                                        ...this.termsRules,
+                                        ...this.fileList,
+                                    }),
+                                    success: (res) => {
+                                        if(res.code === SUCCESS_CODE) {
+                                            // 调用 opener 的方法刷新列表
+                                            if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
+                                                window.opener.contractListApp.getList(true);
+                                            }
+                                        }
+                                    },
+                                    complete: () => {
+                                        this.submitLoading = false;
+                                    }
+                                });
                             } else {
                                 console.log('表单验证失败');
                                 return false;

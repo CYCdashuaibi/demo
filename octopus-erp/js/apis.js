@@ -10,3 +10,6 @@ export const queryContractListApi = "/octopus/portal/erp/contractSupplier/queryC
 
 // 获取用户信息
 export const getPersonInfoApi = "/octopus/portal/erp/contractSupplier/getPersonInfo";
+
+// 新增合同
+export const contractSupplierAddApi = "/octopus/portal/erp/contractSupplier/add";
