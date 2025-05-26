@@ -188,6 +188,7 @@
         <script type="module">
 			import { opUrl, VIEW_SCENE, CONTRACT_TYPE_OPTIONS } from './js/contants.js';
             import { getPersonInfoApi, getCompanySubjectApi } from './js/apis.js';
+            import { handleOptionShow  } from './js/fn.js';
 
             let app = new Vue({
                 el: '#contractView',
@@ -251,7 +252,7 @@
                         loadingSuppliers: false, // 用于控制供应商名称加载状态
                         routeQuery: {},
                         formDisabled: true,
-                        
+
                     }
                 },
                 created() {
