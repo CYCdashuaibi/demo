@@ -13,3 +13,15 @@ export const getPersonInfoApi = "/octopus/portal/erp/contractSupplier/getPersonI
 
 // 新增合同
 export const contractSupplierAddApi = "/octopus/portal/erp/contractSupplier/add";
+
+// 审核通过
+export const contractSupplierAuditeApi = "/octopus/portal/erp/contractSupplier/audite";
+
+// 审核不通过
+export const contractSupplierNotPassApi = "/octopus/portal/erp/contractSupplier/notPass";
+
+// 合同详情
+export const contractSupplierDetailApi = "/octopus/portal/erp/contractSupplier/details";
+
+// 上传附件
+export const fileUpLoadApi = "octopus/portal/erp/contractSupplier/fileUpLoad";

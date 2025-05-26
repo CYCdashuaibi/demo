@@ -14,12 +14,12 @@
 		<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
 		<!-- jquery -->
 		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+        <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
 		<link rel="stylesheet" href="./css/reset.css">
 		<link rel="stylesheet" href="./css/contractView.css" />
 	</head>
 	<body>
-        <div class="contractView" id="contractView" v-cloak>
+        <div class="contractView" id="contractView" v-cloak v-loading="detailLoading" element-loading-text="加载中...">
             <!-- 基本信息 -->
             <div class="contractView__card">
                 <div class="contractView__card_title">
@@ -35,19 +35,19 @@
                             </el-col>
                             <el-col :span="8">
                                 <el-form-item label="直属部门" prop="directDepartment">
-                                  <el-input v-model="baseInfo.directDepartment" placeholder="请输入直属部门" :disabled="true"></el-input>
+                                    <el-input v-model="baseInfo.directDepartment" placeholder="请输入直属部门" :disabled="true"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="8">
                                 <el-form-item label="一级部门" prop="firstLevelDepartment">
-                                  <el-input v-model="baseInfo.firstLevelDepartment" placeholder="请输入一级部门" :disabled="true"></el-input>
+                                    <el-input v-model="baseInfo.firstLevelDepartment" placeholder="请输入一级部门" :disabled="true"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
                             <el-col :span="8">
                                 <el-form-item label="供应商名称" prop="supplierId">
-                                    <el-select v-model="baseInfo.supplierId" placeholder="请选择供应商名称" :loading="supplierOptionsLoading" style="width: 100%;" :disabled="formDisabled" filterable>
+                                    <el-select v-model="baseInfo.supplierId" placeholder="请选择供应商名称" :loading="supplierOptionsLoading" style="width: 100%;" :disabled="routeQuery.pageType  !== VIEW_SCENE.ADD" filterable>
                                       <!-- 供应商名称选项，根据实际情况动态填充 -->
                                         <el-option
                                             v-for="item in supplierOptions"
@@ -61,12 +61,12 @@
                             </el-col>
                              <el-col :span="8">
                                 <el-form-item label="合同名称" prop="contractName">
-                                    <el-input v-model="baseInfo.contractName" placeholder="请输入合同名称" :disabled="formDisabled"></el-input>
+                                    <el-input v-model="baseInfo.contractName" placeholder="请输入合同名称" :disabled="routeQuery.pageType  !== VIEW_SCENE.ADD"></el-input>
                                 </el-form-item>
                             </el-col>
                              <el-col :span="8">
                                 <el-form-item label="合同主体" prop="contractSubject">
-                                    <el-select v-model="baseInfo.contractSubject" placeholder="请选择合同主体" style="width: 100%;" :disabled="formDisabled" :loading="contractSubjectOptionsLoading" filterable>
+                                    <el-select v-model="baseInfo.contractSubject" placeholder="请选择合同主体" style="width: 100%;" :disabled="routeQuery.pageType  !== VIEW_SCENE.ADD" :loading="contractSubjectOptionsLoading" filterable>
                                         <el-option
                                             v-for="item in contractSubjectOptions"
                                             :key="item.value"
@@ -80,7 +80,7 @@
                          <el-row :gutter="20">
                              <el-col :span="8">
                                 <el-form-item label="合同类型" prop="contractType">
-                                    <el-select v-model="baseInfo.contractType" placeholder="请选择合同类型" style="width: 100%;" :disabled="formDisabled" filterable>
+                                    <el-select v-model="baseInfo.contractType" placeholder="请选择合同类型" style="width: 100%;" :disabled="routeQuery.pageType  !== VIEW_SCENE.ADD" filterable>
                                         <el-option
                                             v-for="item in CONTRACT_TYPE_OPTIONS"
                                             :key="item.value"
@@ -93,7 +93,7 @@
                             </el-col>
                              <el-col :span="8">
                                 <el-form-item label="合同来源" prop="contractSource">
-                                    <el-select v-model="baseInfo.contractSource" placeholder="请选择合同来源" style="width: 100%;" :disabled="formDisabled" filterable>
+                                    <el-select v-model="baseInfo.contractSource" placeholder="请选择合同来源" style="width: 100%;" :disabled="routeQuery.pageType  !== VIEW_SCENE.ADD" filterable>
                                         <el-option
                                             v-for="item in CONTRACT_SOURCE_OPTIONS"
                                             :key="item.value"
@@ -108,12 +108,14 @@
                                 <el-form-item label="起止日期" prop="dateRange">
                                     <el-date-picker
                                         v-model="baseInfo.dateRange"
-                                        type="daterange"
+                                        type="datetimerange"
+                                        format="yyyy-MM-dd HH:mm:ss"
+                                        value-format="yyyy-MM-dd HH:mm:ss"
                                         range-separator="至"
                                         start-placeholder="开始日期"
                                         end-placeholder="结束日期"
                                         style="width: 100%;"
-                                        :disabled="formDisabled"
+                                        :disabled="routeQuery.pageType  !== VIEW_SCENE.ADD"
                                     >
                                     </el-date-picker>
                                 </el-form-item>
@@ -131,50 +133,53 @@
                 <div class="contractView__card_content">
                     <el-form :model="termsRules" label-position="top" size="mini">
                         <el-form-item label="结算条款">
-                            <el-input v-model="termsRules.calculationTerms" :rows="1" autosize type="textarea" placeholder="请输入结算条款" :disabled="formDisabled"></el-input>
+                            <el-input v-model="termsRules.calculationTerms" :rows="1" autosize type="textarea" placeholder="请输入结算条款" :disabled="routeQuery.pageType === VIEW_SCENE.VIEW"></el-input>
                             </el-form-item>
                         <el-form-item label="业务规则">
-                            <el-input v-model="termsRules.businessRules" :rows="1" autosize type="textarea" placeholder="请输入业务规则" :disabled="formDisabled"></el-input>
+                            <el-input v-model="termsRules.businessRules" :rows="1" autosize type="textarea" placeholder="请输入业务规则" :disabled="routeQuery.pageType === VIEW_SCENE.VIEW"></el-input>
                             </el-form-item>
                         <el-form-item label="追溯条款">
-                            <el-input v-model="termsRules.traceabilityClause" :rows="1" autosize type="textarea" placeholder="请输入追溯条款" :disabled="formDisabled"></el-input>
+                            <el-input v-model="termsRules.traceabilityClause" :rows="1" autosize type="textarea" placeholder="请输入追溯条款" :disabled="routeQuery.pageType === VIEW_SCENE.VIEW"></el-input>
                             </el-form-item>
                         <el-form-item label="特殊条款">
-                            <el-input v-model="termsRules.specialProvisions" :rows="1" autosize type="textarea" placeholder="请输入特殊条款" :disabled="formDisabled"></el-input>
+                            <el-input v-model="termsRules.specialProvisions" :rows="1" autosize type="textarea" placeholder="请输入特殊条款" :disabled="routeQuery.pageType === VIEW_SCENE.VIEW"></el-input>
                         </el-form-item>
                     </el-form>    
                 </div>
             </div>
 
             <!-- 附件管理 -->
-             <div class="contractView__card" style="margin-top: 16px;">
+            <div class="contractView__card" style="margin-top: 16px;">
                 <div class="contractView__card_title">
                     附件管理
                 </div>
                 <div class="contractView__card_content">
                     <!-- 文件列表表格 -->
-                    <el-table :data="fileList" style="width: 100%; margin-bottom: 10px;" size="mini">
+                    <el-table :data="attachFile" style="width: 100%; margin-bottom: 10px;" size="mini">
                         <el-table-column
                             label="文件"
                             prop="name"> <!-- 文件名属性 -->
                         </el-table-column>
                         <el-table-column
                             label="操作"
-                            width="150">
+                            width="150"
+                            v-if="routeQuery.pageType  !== VIEW_SCENE.VIEW"
+                        >
                             <template slot-scope="scope">
-                                <el-button @click="handleViewFile(scope.row)" type="text" size="small">查看</el-button>
-                                <el-button @click="handleDeleteFile(scope.$index, scope.row)" type="text" size="small">删除</el-button>
+                                <el-button @click="handleViewFile(scope.row)" type="text" size="small">下载</el-button>
+                                <el-button @click="handleDeleteFile(scope.row)" type="text" size="small">删除</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
 
                     <!-- 上传附件区域 -->
-                    <div class="contractView__upload_area" v-if="!formDisabled">
+                    <div class="contractView__upload_area" v-if="routeQuery.pageType !== VIEW_SCENE.VIEW">
                         <el-upload
+                            ref="uploadRef"
                             multiple
-                            :file-list="fileList"
-                            :on-success="handleUploadSuccess"
-                            :on-remove="handleRemoveFile"
+                            :auto-upload="false"
+                            :file-list="attachFile"
+                            :on-change="handleFileChange"
                             :show-file-list="false"
                             drag
                         >
@@ -192,11 +197,24 @@
                 <el-button type="primary" @click="onAudit(1)" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.AUDIT">审批通过</el-button>
                 <el-button type="primary" @click="onAdd" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.ADD">确定</el-button>
             </div>
+
+            <!-- 不通过原因弹窗 -->
+			<el-dialog
+                title="不通过原因"
+                :visible.sync="notPassReasonVisible"
+                width="40%"
+            >
+                <el-input v-model="notPassReason" :autosize="{ minRows: 3, maxRows: 5}" type="textarea" placeholder="请输入不通过原因"></el-input>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="notPassReasonVisible = false" size="mini">取 消</el-button>
+                    <el-button type="primary" @click="notPass" size="mini">确 定</el-button>
+                </span>
+            </el-dialog>
         </div>
 
         <script type="module">
 			import { opUrl, VIEW_SCENE, CONTRACT_TYPE_OPTIONS, CONTRACT_SOURCE_OPTIONS, SUCCESS_CODE } from './js/contants.js';
-            import { getPersonInfoApi, getCompanySubjectApi, queryContractListApi, contractSupplierAddApi } from './js/apis.js';
+            import { getPersonInfoApi, getCompanySubjectApi, queryContractListApi, contractSupplierAddApi, contractSupplierAuditeApi, contractSupplierDetailApi, fileUpLoadApi, contractSupplierNotPassApi } from './js/apis.js';
             import { handleOptionShow  } from './js/fn.js';
 
             let app = new Vue({
@@ -262,31 +280,39 @@
                         },
                         submitLoading: false,
                         // 附件列表数据，根据需要添加，结构应包含 name, url/id 等
-                        fileList: [],
+                        attachFile: [],
                         routeQuery: {},
                         formDisabled: true,
+                        personInfo: {},
+                        detailLoading: false,
+                        detailData: {},
+                        personInfoLoading: false,
+                        notPassReasonVisible: false,
+                        notPassReason: '',
                     }
                 },
                 created() {
+                    // TODO: 
                     // const query = this.$route.query;
                     // this.routeQuery = query;
-                    // this.formDisabled = query.pageType !== VIEW_SCENE.ADD;
                     this.routeQuery = {
-                        pageType: VIEW_SCENE.ADD,
-                        id: 1,
+                        pageType: VIEW_SCENE.VIEW,
+                        id: 4,
                     };
-                    this.formDisabled = false;
                     // document.title = query.pageType;
 
                     // if (query.pageType === VIEW_SCENE.ADD) {
-                    if (true) {
+                    if (false) {
                         this.getPersonInfo();
                         this.getCompanySubject();
                         this.queryContractList();
+                    } else{
+                        this.getContractSupplierDetail();
                     }
                 },
                 methods: {
                     getPersonInfo() {
+                        this.personInfoLoading = false;
 						$.ajax({
 							url: getPersonInfoApi,
 							type: "post",
@@ -303,10 +329,12 @@
                                         directDepartment: data.deptName,
                                         firstLevelDepartment: data.firstDeptName,
                                     }
+                                    this.personInfo = data;
 								}
 							},
 							complete: () => {
-							}
+                                this.personInfoLoading = true;
+							},
 						});
 					},
                     getCompanySubject() {
@@ -352,8 +380,67 @@
 							}
 						});
                     },
+                    getContractSupplierDetail() {
+                        this.detailLoading = true;
+                        $.ajax({
+							url: contractSupplierDetailApi,
+							type: "post",
+							dataType: "json",
+							contentType: "application/json",
+							data: JSON.stringify({
+                                id: this.routeQuery.id,
+                            }),
+							success: (res) => {                                
+								if(res.code === SUCCESS_CODE) {
+                                    const { customerContractEntity, personInfo } = res.data || {};
+                                    // // 填充基本信息
+                                    this.baseInfo = {
+                                        ...customerContractEntity,
+                                        application: personInfo.name,
+                                        directDepartment: personInfo.deptName,
+                                        firstLevelDepartment: personInfo.firstDeptName,
+                                        dateRange: customerContractEntity.contractBeginTime && customerContractEntity.beginEndTime ? [customerContractEntity.contractBeginTime, customerContractEntity.beginEndTime] : null,
+                                    };
+                                    this.supplierOptions = [{ value: customerContractEntity.supplierId, label: customerContractEntity.supplierName }];
+                                    this.contractSubjectOptions = [{ value: customerContractEntity.contractSubject, label: customerContractEntity.contractSubjectName }]
+                                    // // 填充条款规则类
+                                    this.termsRules = {
+                                        calculationTerms: customerContractEntity.calculationTerms,
+                                        businessRules: customerContractEntity.businessRules,
+                                        traceabilityClause: customerContractEntity.traceabilityClause,
+                                        specialProvisions: customerContractEntity.specialProvisions,
+                                    };
+                                    // // 填充附件列表
+                                    this.attachFile = (customerContractEntity.attachFile || []).map(item => ({ name: item, uid: item }));
+								}
+							},
+                            complete: () => {                                
+								this.detailLoading = false;
+							}
+						});
+                    },
                     resetForm() {
-                        
+                        this.baseInfo = {
+                            application: this.personInfo.name,
+                            directDepartment: this.personInfo.deptName,
+                            firstLevelDepartment: this.personInfo.firstDeptName,
+                            supplierId: '',
+                            contractName: '',
+                            contractSubject: '01',
+                            contractType: '',
+                            contractSource: '',
+                            dateRange: null,
+                        };
+                        this.termsRules = {
+                            calculationTerms: '',
+                            businessRules: '',
+                            traceabilityClause: '',
+                            specialProvisions: '',
+                        };
+                        this.attachFile = [];
+
+                        // 如果使用 Element UI 的表单组件，还可以调用其 resetFields 方法
+                        this.$refs.form.resetFields();
                     },
                     onAdd() {
                         // 触发表单验证
@@ -361,91 +448,143 @@
                             if (valid) {
                                 this.submitLoading = true;
                                 $.ajax({
-                                    url: queryContractListApi,
+                                    url: contractSupplierAddApi,
                                     type: "post",
                                     dataType: "json",
                                     contentType: "application/json",
                                     data: JSON.stringify({
                                         ...this.baseInfo,
                                         ...this.termsRules,
-                                        ...this.fileList,
+                                        attachFile: (this.attachFile || []).map(item => item.name),
+                                        contractBeginTime: this.baseInfo.dateRange?.[0],
+                                        beginEndTime: this.baseInfo.dateRange?.[1],
                                     }),
                                     success: (res) => {
                                         if(res.code === SUCCESS_CODE) {
+                                            this.resetForm();
                                             // 调用 opener 的方法刷新列表
                                             if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
                                                 window.opener.contractListApp.getList(true);
                                             }
+                                            this.$message.success("新增成功");
                                         }
                                     },
                                     complete: () => {
                                         this.submitLoading = false;
+                                    },
+                                    error: () => {
+                                        this.$message.error("新增失败");
                                     }
                                 });
-                            } else {
-                                console.log('表单验证失败');
-                                return false;
                             }
                         });
                     },
                     onAudit(value) {
-                        console.log(value);
-                        // 调用 opener 的方法刷新列表
-                        if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
-                            window.opener.contractListApp.getList(true);
-                        }
-                    },
-                    // 文件上传成功时的钩子
-                    handleUploadSuccess(response, file, fileList) {
-                         // 处理上传成功后的逻辑，例如将文件信息添加到 fileList 中
-                        console.log('文件上传成功:', response, file, fileList);
-                        // 示例：假设response包含文件信息，根据实际后端返回调整
-                        if (response && response.code === '0000' && response.data) {
-                            this.fileList.push({
-                                name: response.data.fileName,
-                                url: response.data.fileUrl, // 或其他标识文件的属性
-                                id: response.data.fileId // 或其他唯一标识
+                        this.submitLoading = true;
+                        if (value === 1) {
+                            this.$confirm('确定通过审核？', '提示', {
+                                confirmButtonText: '确定',
+                                cancelButtonText: '取消',
+                            }).then(() => {
+                                $.ajax({
+                                    url: contractSupplierAuditeApi,
+                                    type: "post",
+                                    dataType: "json",
+                                    contentType: "application/json",
+                                    data: JSON.stringify({
+                                        ...this.baseInfo,
+                                        ...this.termsRules,
+                                        attachFile: (this.attachFile || []).map(item => item.name),
+                                        contractBeginTime: this.baseInfo.dateRange?.[0],
+                                        beginEndTime: this.baseInfo.dateRange?.[1],
+                                        id: this.routeQuery.id,
+                                    }),
+                                    success: (res) => {
+                                        if(res.code === SUCCESS_CODE) {
+                                            this.resetForm();
+                                            // 调用 opener 的方法刷新列表
+                                            if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
+                                                window.opener.contractListApp.getList(true);
+                                            }
+                                            this.$message.success("审核成功");
+                                            // TODO: 关闭页面
+                                        }
+                                    },
+                                    complete: () => {
+                                        this.submitLoading = false;
+                                    },
+                                    error: () => {
+                                        this.$message.error("审核失败");
+                                    }
+                                });
                             });
-                        }
-                    },
-                    // 文件列表移除文件时的钩子
-                    handleRemoveFile(file, fileList) {
-                         // 处理文件移除逻辑，例如从 fileList 中移除文件
-                         console.log('文件移除:', file, fileList);
-                         // 您可能需要根据文件的唯一标识来从fileList中找到并移除
-                         const index = this.fileList.findIndex(item => item.id === file.id); // 假设文件对象有id属性
-                         if (index !== -1) {
-                            this.fileList.splice(index, 1);
-                             // 如果需要，这里可以调用后端接口删除服务器上的文件
-                         }
-                    },
-                    // 查看文件方法
-                    handleViewFile(file) {
-                        console.log('查看文件:', file);
-                        // 实现文件查看逻辑，例如新窗口打开文件URL
-                        if (file.url) {
-                            window.open(file.url, '_blank');
                         } else {
-                             this.$message.warning('文件URL不存在');
+                            this.notPassReasonVisible = true;
                         }
                     },
-                    // 删除文件方法
-                    handleDeleteFile(index, file) {
-                        console.log('删除文件:', file);
-                         // 触发表格中的删除操作
-                         this.$confirm('确定删除该文件？', '提示', {
+                    notPass() {
+                        $.ajax({
+                            url: contractSupplierNotPassApi,
+                            type: "post",
+                            dataType: "json",
+                            contentType: "application/json",
+                            data: JSON.stringify({
+                                id: this.routeQuery.id,
+                                notPassReason: this.notPassReason,
+                            }),
+                            success: (res) => {
+                                if(res.code === SUCCESS_CODE) {
+                                    this.resetForm();
+                                    // 调用 opener 的方法刷新列表
+                                    if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
+                                        window.opener.contractListApp.getList(true);
+                                    }
+                                    this.$message.success("审核成功");
+                                    this.notPassReasonVisible = false;
+                                    // TODO: 关闭页面
+                                }
+                            },
+                            complete: () => {
+                                this.submitLoading = false;
+                            },
+                            error: () => {
+                                this.$message.error("审核失败");
+                            }
+                        });
+                    },
+                    async handleFileChange(file) {
+                        // 拼接 guid = 文件名 + 当前时间戳
+                        const timestamp = Date.now();
+                        const guid = `${timestamp}_${file.name}`;
+
+                        // 创建 FormData 对象，按照后端需求构造字段
+                        const formData = new FormData();
+                        formData.append('guid', guid);
+                        formData.append('_contract', file.raw);
+                        formData.append('uploadFileName', '_contract');
+
+                        $.ajax({
+                            url: fileUpLoadApi,
+                            type: 'POST',
+                            data: formData,
+                            contentType: false,
+                            processData: false,
+                            success: (res) => {
+                                this.$message?.success(`文件 ${file.name} 上传成功`);
+                                this.attachFile.push({ name: res.filePath, uid: file.uid });
+                            },
+                            error: function (err) {
+                                console.error('上传失败', err);
+                                this.$message?.error(`文件 ${file.name} 上传失败`);
+                            }
+                        });
+                    },
+                    handleDeleteFile(item) {
+                        this.$confirm('确定删除该文件？', '提示', {
                             confirmButtonText: '确定',
                             cancelButtonText: '取消',
-                            type: 'warning'
                         }).then(() => {
-                            // 在这里执行实际删除逻辑，例如调用后端接口
-                            console.log('确认删除文件:', file);
-                            // 模拟删除成功后从列表中移除
-                            this.fileList.splice(index, 1);
-                            this.$message.success('删除成功!');
-                        }).catch(() => {
-                            // 取消删除
-                             this.$message.info('已取消删除');
+                            this.attachFile = this.attachFile.filter(file => file.uid !== item.uid);
                         });
                     },
                     handleOptionShow,

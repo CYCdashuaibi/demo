@@ -76,34 +76,34 @@
 							<template slot-scope="scope">{{ scope.row.contractName }}</template>
 						</el-table-column>
 						<el-table-column label="合同主体" width="120" show-overflow-tooltip>
-							<template slot-scope="scope">{{ scope.row.contractSubject }}</template>
+							<template slot-scope="scope">{{ scope.row.contractSubjectName }}</template>
 						</el-table-column>
 						<el-table-column label="合同类型" width="120" show-overflow-tooltip>
 							<template slot-scope="scope">{{ handleOptionShow(CONTRACT_TYPE_OPTIONS, scope.row.contractType) }}</template>
 						</el-table-column>
-						<el-table-column label="合同有效期" width="250" show-overflow-tooltip>
-							<template slot-scope="scope">{{ scope.row.contractBeginTime }} 至 {{ scope.row.contractEndTime }}</template>
+						<el-table-column label="合同有效期" width="272" show-overflow-tooltip>
+							<template slot-scope="scope">{{ scope.row.contractBeginTime }} 至 {{ scope.row.beginEndTime }}</template>
 						</el-table-column>
-						<el-table-column label="提交时间" width="80" show-overflow-tooltip>
+						<el-table-column label="提交时间" width="150" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.createTime }}</template>
 						</el-table-column>
 						<el-table-column label="审核人" width="120" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.createTime }}</template>
 						</el-table-column>
-						<el-table-column label="审核时间" width="80" show-overflow-tooltip>
+						<el-table-column label="审核时间" width="150" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.auditeTime }}</template>
 						</el-table-column>
 						<el-table-column label="合同状态" width="100" show-overflow-tooltip>
 							<template slot-scope="scope">{{ handleOptionShow(CONTRACT_STATUS_OPTIONS, scope.row.contractStatus) }}</template>
 						</el-table-column>
-						<el-table-column label="操作" width="300" fixed="right">
+						<el-table-column label="操作" width="200" fixed="right">
 							<template slot-scope="scope">
 								<div>
-									<el-button type="text" size="small" @click="toAudit(scope.row)">合同审核</el-button>
+									<el-button type="text" size="small" @click="toAudit(scope.row)" v-if="scope.row.contractStatus === '0'">合同审核</el-button>
 									<el-button type="text" size="small" @click="toDetail(scope.row)">查看详情</el-button>
 									<el-button type="text" size="small" @click="toProcess(scope.row)">查看流程</el-button>
-									<el-button type="text" size="small" @click="beforeArchive(scope.row)">合同归档</el-button>
-									<el-button type="text" size="small" @click="beforeDownloadContract(scope.row)">下载</el-button>
+									<el-button type="text" size="small" @click="beforeArchive(scope.row)" v-if="scope.row.contractStatus === '1'">合同归档</el-button>
+									<el-button type="text" size="small" @click="beforeDownloadContract(scope.row)" v-if="scope.row.contractStatus === '2'">下载</el-button>
 								</div>
 							</template>
 						</el-table-column>
@@ -284,19 +284,22 @@
 						this.archiveVisible = true;
 					},
 					toAudit(item) {
+						// TODO: 
 						// window.open(`./contractView?id=${item.id}&pageType=${VIEW_SCENE.AUDIT}`);
 						window.open(`./contractView.html`);
 					},
 					toDetail(item) {
+						// TODO: 
 						// window.open(`./contractView?id=${item.id}&pageType=${VIEW_SCENE.VIEW}`);
 						window.open(`./contractView.html`);
 					},
 					toAdd() {
+						// TODO: 
 						// window.open(`./contractView?pageType=${VIEW_SCENE.ADD}`);
 						window.open(`./contractView.html`);
 					},
 					toProcess(item) {
-						
+						// TODO
 					},
 					// 文件上传成功时的钩子
 					handleUploadSuccess(response, file, fileList) {

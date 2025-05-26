@@ -2,6 +2,7 @@
 
 // export const opUrl = "http://newdev2.ejcop.com:1081/octopus";
 export const opUrl = "/api";
+export const FILE_BASE_URL = '/product/chummyDistributor/getFile';
 
 export const VIEW_SCENE = {
     ADD: '新增合同',
