@@ -27,20 +27,21 @@
 				<div class="contract__search_form">
 					<div class="contract_row">
 						<div class="contract_col_6">
-							<el-input size="mini" v-model="searchForm.taskKeyword" placeholder="请输入供应商名称" />
+							<el-input size="mini" v-model="searchForm.supplierName" placeholder="请输入供应商名称" />
 						</div>
 						<div class="contract_col_6">
-							<el-select v-model="searchForm.oldGoodsKeyword" size="mini" placeholder="请选择审核状态" style="width: 100%;">
+							<el-select v-model="searchForm.contractStatus" size="mini" placeholder="请选择合同状态" style="width: 100%;">
 								<el-option
-									v-for="item in [{value: 1, label: '已审核'}, {value: 2, label: '未审核'}, {value: 3, label: '已拒绝'}]"
+									v-for="item in CONTRACT_STATUS_OPTIONS"
 									:key="item.value"
 									:label="item.label"
-									:value="item.value">
+									:value="item.value"
+								>
 								</el-option>
 							</el-select>
 						</div>
 						<div class="contract_col_6">
-							<el-input size="mini" v-model="searchForm.oldSkuKeyword" placeholder="请输入商务负责人" />
+							<el-input size="mini" v-model="searchForm.businessOperator" placeholder="请输入商务负责人" />
 						</div>
 					</div>
 				</div>
@@ -59,43 +60,43 @@
 			<div class="contract__table">
 				<div class="contract__table_content" ref="tableContentRef">
 					<el-table :data="contractList" tooltip-effect="dark" size="mini" v-loading="pager.loading" :height="tableHeight">
-						<el-table-column label="供应商id" width="100">
+						<el-table-column label="供应商id" width="80" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.supplierId }}</template>
 						</el-table-column>
-						<el-table-column label="供应商名称" show-overflow-tooltip>
+						<el-table-column label="供应商名称" width="200" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.supplierName }}</template>
 						</el-table-column>
-						<el-table-column label="商务负责人" show-overflow-tooltip>
+						<el-table-column label="商务负责人" width="120" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.businessOperator }}</template>
 						</el-table-column>
-						<el-table-column label="合同编码" show-overflow-tooltip>
+						<el-table-column label="合同编码" width="100" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.contractCode }}</template>
 						</el-table-column>
-						<el-table-column label="合同名称" width="80" show-overflow-tooltip>
+						<el-table-column label="合同名称" width="200" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.contractName }}</template>
 						</el-table-column>
-						<el-table-column label="合同主体" width="80" show-overflow-tooltip>
+						<el-table-column label="合同主体" width="120" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.contractSubject }}</template>
 						</el-table-column>
-						<el-table-column label="合同类型" width="80" show-overflow-tooltip>
+						<el-table-column label="合同类型" width="120" show-overflow-tooltip>
 							<template slot-scope="scope">{{ handleOptionShow(CONTRACT_TYPE_OPTIONS, scope.row.contractType) }}</template>
 						</el-table-column>
-						<el-table-column label="合同有效期" width="80" show-overflow-tooltip>
-							<template slot-scope="scope">{{ scope.row.contractBeginTime }} - {{ cope.row.contractEndTime }}</template>
+						<el-table-column label="合同有效期" width="250" show-overflow-tooltip>
+							<template slot-scope="scope">{{ scope.row.contractBeginTime }} 至 {{ scope.row.contractEndTime }}</template>
 						</el-table-column>
 						<el-table-column label="提交时间" width="80" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.createTime }}</template>
 						</el-table-column>
-						<el-table-column label="审核人" width="80" show-overflow-tooltip>
+						<el-table-column label="审核人" width="120" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.createTime }}</template>
 						</el-table-column>
 						<el-table-column label="审核时间" width="80" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.auditeTime }}</template>
 						</el-table-column>
-						<el-table-column label="合同状态" width="80" show-overflow-tooltip>
+						<el-table-column label="合同状态" width="100" show-overflow-tooltip>
 							<template slot-scope="scope">{{ handleOptionShow(CONTRACT_STATUS_OPTIONS, scope.row.contractStatus) }}</template>
 						</el-table-column>
-						<el-table-column label="操作" width="300" fixed="right" show-overflow-tooltip>
+						<el-table-column label="操作" width="300" fixed="right">
 							<template slot-scope="scope">
 								<div>
 									<el-button type="text" size="small" @click="toAudit(scope.row)">合同审核</el-button>
@@ -194,9 +195,9 @@
 						CONTRACT_TYPE_OPTIONS,
 						CONTRACT_STATUS_OPTIONS,
 						searchForm: {
-							taskKeyword: "",
-							oldGoodsKeyword: "",
-							oldSkuKeyword: "",
+							supplierName: "",
+							contractStatus: "",
+							businessOperator: "",
 						},
 						pager:{
 							pageNo: 1,
@@ -252,8 +253,6 @@
 								...this.searchForm,
 							}),
 							success: (res) => {
-								console.log(res);
-								
 								if(res.code === SUCCESS_CODE){
 									let { count, list } = res.data;
 									this.contractList = list || [];
@@ -267,9 +266,9 @@
 					},
 					reset() {
 						this.searchForm =  {
-							taskKeyword: "",
-							oldGoodsKeyword: "",
-							oldSkuKeyword: "",
+							supplierName: "",
+							contractStatus: "",
+							businessOperator: "",
 						}
 						this.getList(true);
 					},
