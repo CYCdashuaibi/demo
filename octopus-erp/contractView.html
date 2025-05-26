@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>新增合同</title>
+
+		<!-- Vue.js -->
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script>
+		<!-- Element UI -->
+		<link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css" />
+		<script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+		<!-- dayjs -->
+		<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+		<!-- jquery -->
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+		<link rel="stylesheet" href="./css/reset.css">
+		<link rel="stylesheet" href="./css/contractView.css" />
+	</head>
+	<body>
+        <div class="contractView" id="contractView" v-cloak>
+            <!-- 基本信息 -->
+            <div class="contractView__card">
+                <div class="contractView__card_title">
+                    基本信息
+                </div>
+                <div class="contractView__card_content">
+                    <el-form ref="form" :model="baseInfo" :rules="baseInfoRules" label-position="top" size="mini">
+                        <el-row :gutter="20">
+                            <el-col :span="8">
+                                <el-form-item label="申请人" prop="application">
+                                  <el-input v-model="baseInfo.application" placeholder="请输入申请人" :disabled="true"></el-input>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="直属部门" prop="directDepartment">
+                                  <el-input v-model="baseInfo.directDepartment" placeholder="请输入直属部门" :disabled="true"></el-input>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="一级部门" prop="firstLevelDepartment">
+                                  <el-input v-model="baseInfo.firstLevelDepartment" placeholder="请输入一级部门" :disabled="true"></el-input>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row :gutter="20">
+                            <el-col :span="8">
+                                <el-form-item label="供应商名称" prop="supplierName">
+                                    <el-select v-model="baseInfo.supplierName" placeholder="请选择供应商名称" :loading="loadingSuppliers" style="width: 100%;" :disabled="formDisabled">
+                                      <!-- 供应商名称选项，根据实际情况动态填充 -->
+                                        <el-option
+                                            v-for="item in supplierOptions"
+                                            :key="item.value"
+                                            :label="item.label"
+                                            :value="item.value"
+                                        >
+                                        </el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                             <el-col :span="8">
+                                <el-form-item label="合同名称" prop="contractName">
+                                    <el-input v-model="baseInfo.contractName" placeholder="请输入合同名称" :disabled="formDisabled"></el-input>
+                                </el-form-item>
+                            </el-col>
+                             <el-col :span="8">
+                                <el-form-item label="合同主体" prop="contractSubject">
+                                    <el-select v-model="baseInfo.contractSubject" placeholder="请选择合同主体" style="width: 100%;" :disabled="formDisabled">
+                                        <!-- 合同主体选项，根据实际情况填充 -->
+                                        <el-option label="主体一" value="subject1"></el-option>
+                                        <el-option label="主体二" value="subject2"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                         <el-row :gutter="20">
+                             <el-col :span="8">
+                                <el-form-item label="合同类型" prop="contractType">
+                                    <el-select v-model="baseInfo.contractType" placeholder="请选择合同类型" style="width: 100%;" :disabled="formDisabled">
+                                        <el-option label="直客运营商" value="operator"></el-option>
+                                        <el-option label="代理供应商-号卡" value="agent_sim"></el-option>
+                                        <el-option label="代理供应商-存量" value="agent_stock"></el-option>
+                                        <el-option label="代理供应商-宽带" value="agent_broadband"></el-option>
+                                        <el-option label="物联网" value="iot"></el-option>
+                                        <el-option label="媒体供应商" value="media"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                             <el-col :span="8">
+                                <el-form-item label="合同来源" prop="contractSource">
+                                    <el-select v-model="baseInfo.contractSource" placeholder="请选择合同来源" style="width: 100%;" :disabled="formDisabled">
+                                        <el-option label="标准合同" value="standard"></el-option>
+                                        <el-option label="客户合同" value="customer"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                             <el-col :span="8">
+                                <el-form-item label="起止日期" prop="dateRange">
+                                    <el-date-picker
+                                        v-model="baseInfo.dateRange"
+                                        type="daterange"
+                                        range-separator="至"
+                                        start-placeholder="开始日期"
+                                        end-placeholder="结束日期"
+                                        style="width: 100%;"
+                                        :disabled="formDisabled"
+                                    >
+                                    </el-date-picker>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                      </el-form>
+                </div>
+            </div>
+
+            <!-- 条款规则类 -->
+            <div class="contractView__card" style="margin-top: 16px;">
+                <div class="contractView__card_title">
+                    条款规则类
+                </div>
+                <div class="contractView__card_content">
+                    <el-form :model="termsRules" label-position="top" size="mini">
+                        <el-form-item label="结算条款">
+                            <el-input v-model="termsRules.settlementTerms" :rows="1" autosize type="textarea" placeholder="请输入结算条款" :disabled="formDisabled"></el-input>
+                            </el-form-item>
+                        <el-form-item label="业务规则">
+                            <el-input v-model="termsRules.businessRules" :rows="1" autosize type="textarea" placeholder="请输入业务规则" :disabled="formDisabled"></el-input>
+                            </el-form-item>
+                        <el-form-item label="追溯条款">
+                            <el-input v-model="termsRules.traceabilityTerms" :rows="1" autosize type="textarea" placeholder="请输入追溯条款" :disabled="formDisabled"></el-input>
+                            </el-form-item>
+                        <el-form-item label="特殊条款">
+                            <el-input v-model="termsRules.specialTerms" :rows="1" autosize type="textarea" placeholder="请输入特殊条款" :disabled="formDisabled"></el-input>
+                        </el-form-item>
+                    </el-form>    
+                </div>
+            </div>
+
+            <!-- 附件管理 -->
+             <div class="contractView__card" style="margin-top: 16px;">
+                <div class="contractView__card_title">
+                    附件管理
+                </div>
+                <div class="contractView__card_content">
+                    <!-- 文件列表表格 -->
+                    <el-table :data="fileList" style="width: 100%; margin-bottom: 10px;" size="mini">
+                        <el-table-column
+                            label="文件"
+                            prop="name"> <!-- 文件名属性 -->
+                        </el-table-column>
+                        <el-table-column
+                            label="操作"
+                            width="150">
+                            <template slot-scope="scope">
+                                <el-button @click="handleViewFile(scope.row)" type="text" size="small">查看</el-button>
+                                <el-button @click="handleDeleteFile(scope.$index, scope.row)" type="text" size="small">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+
+                    <!-- 上传附件区域 -->
+                    <div class="contractView__upload_area" v-if="!formDisabled">
+                        <el-upload
+                            multiple
+                            :file-list="fileList"
+                            :on-success="handleUploadSuccess"
+                            :on-remove="handleRemoveFile"
+                            :show-file-list="false"
+                            drag
+                        >
+                            <div class="contractView__upload_area">
+                                <i class="el-icon-plus"></i>上传附件
+                            </div>
+                        </el-upload>
+                     </div>
+                </div>
+            </div>
+
+            <div class="contractView__footer">
+                <el-button type="default" @click="$router.back()" :loading="submitLoading" size="mini">{{routeQuery.pageType === VIEW_SCENE.VIEW ? '关闭' : '取消'}}</el-button>
+                <el-button type="danger" @click="onAudit(0)" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.AUDIT">审批不通过</el-button>
+                <el-button type="primary" @click="onAudit(1)" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.AUDIT">审批通过</el-button>
+                <el-button type="primary" @click="onAdd" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.ADD">确定</el-button>
+            </div>
+        </div>
+
+        <script type="module">
+			import { opUrl, VIEW_SCENE, CONTRACT_TYPE_OPTIONS } from './js/contants.js';
+            import { getPersonInfoApi, getCompanySubjectApi } from './js/apis.js';
+
+            let app = new Vue({
+                el: '#contractView',
+                data() {
+                    return {
+                        CONTRACT_TYPE_OPTIONS,
+                        VIEW_SCENE,
+                        baseInfo: {
+                            application: '',
+                            directDepartment: '',
+                            firstLevelDepartment: '',
+                            supplierName: '',
+                            contractName: '',
+                            contractSubject: '',
+                            contractType: '',
+                            contractSource: '',
+                            dateRange: null,
+                        },
+                        // 基本信息表单验证规则
+                        baseInfoRules: {
+                            application: [
+                                { required: true, message: '请输入申请人', trigger: 'blur' }
+                            ],
+                            directDepartment: [
+                                { required: true, message: '请输入直属部门', trigger: 'blur' }
+                            ],
+                            firstLevelDepartment: [
+                                { required: true, message: '请输入一级部门', trigger: 'blur' }
+                            ],
+                            supplierName: [
+                                { required: true, message: '请选择供应商名称', trigger: 'change' }
+                            ],
+                            contractName: [
+                                { required: true, message: '请输入合同名称', trigger: 'blur' }
+                            ],
+                            contractSubject: [
+                                { required: true, message: '请选择合同主体', trigger: 'change' }
+                            ],
+                            contractType: [
+                                { required: true, message: '请选择合同类型', trigger: 'change' }
+                            ],
+                            contractSource: [
+                                { required: true, message: '请选择合同来源', trigger: 'change' }
+                            ],
+                             dateRange: [
+                                { required: true, message: '请选择起止日期', trigger: 'change' }
+                            ],
+                        },
+                        // 条款规则类表单数据
+                        termsRules: {
+                            settlementTerms: '', // 结算条款
+                            businessRules: '', // 业务规则
+                            traceabilityTerms: '', // 追溯条款
+                            specialTerms: '', // 特殊条款
+                        },
+                        submitLoading: false,
+                        // 附件列表数据，根据需要添加，结构应包含 name, url/id 等
+                        fileList: [],
+                        // 供应商名称选项数据，根据实际情况动态填充
+                        supplierOptions: [],
+                        loadingSuppliers: false, // 用于控制供应商名称加载状态
+                        routeQuery: {},
+                        formDisabled: true,
+                        
+                    }
+                },
+                created() {
+                    // const query = this.$route.query;
+                    // this.routeQuery = query;
+                    // this.formDisabled = query.pageType !== VIEW_SCENE.ADD;
+                    this.routeQuery = {
+                        pageType: VIEW_SCENE.AUDIT,
+                        id: 1,
+                    };
+                    this.formDisabled = false;
+                    // document.title = query.pageType;
+
+                    this.getPersonInfo();
+                },
+                methods: {
+                    getPersonInfo() {
+						$.ajax({
+							url: getPersonInfoApi,
+							type: "post",
+							dataType: "json",
+							contentType: "application/json",
+							data: JSON.stringify({}),
+							success: (res) => {
+                                console.log(res);
+                                
+								if(res.code === SUCCESS_CODE){
+                                    
+								}
+							},
+							complete: () => {
+							}
+						});
+					},
+                    getCompanySubject() {
+                        $.ajax({
+							url: getCompanySubjectApi,
+							type: "post",
+							dataType: "json",
+							contentType: "application/json",
+							data: JSON.stringify({}),
+							success: (res) => {
+								if(res.code === SUCCESS_CODE){
+                                    
+								}
+							},
+						});
+                    },
+                    onAdd() {
+                        // 触发表单验证
+                        this.$refs.form.validate((valid) => {
+                            if (valid) {
+                                console.log('基本信息验证通过，提交数据:', this.baseInfo);
+                                console.log('条款规则类数据:', this.termsRules);
+                                console.log('附件列表数据:', this.fileList);
+                                // 调用 opener 的方法刷新列表
+                                if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
+                                    window.opener.contractListApp.getList(true);
+                                }
+                                // 在这里处理表单提交逻辑，可以合并 baseInfo, termsRules, fileList 等数据
+                            } else {
+                                console.log('表单验证失败');
+                                return false;
+                            }
+                        });
+                    },
+                    onAudit(value) {
+                        console.log(value);
+                        // 调用 opener 的方法刷新列表
+                        if (window.opener && window.opener.contractListApp && window.opener.contractListApp.getList) {
+                            window.opener.contractListApp.getList(true);
+                        }
+                    },
+                    // 文件上传成功时的钩子
+                    handleUploadSuccess(response, file, fileList) {
+                         // 处理上传成功后的逻辑，例如将文件信息添加到 fileList 中
+                        console.log('文件上传成功:', response, file, fileList);
+                        // 示例：假设response包含文件信息，根据实际后端返回调整
+                        if (response && response.code === '0000' && response.data) {
+                            this.fileList.push({
+                                name: response.data.fileName,
+                                url: response.data.fileUrl, // 或其他标识文件的属性
+                                id: response.data.fileId // 或其他唯一标识
+                            });
+                        }
+                    },
+                    // 文件列表移除文件时的钩子
+                    handleRemoveFile(file, fileList) {
+                         // 处理文件移除逻辑，例如从 fileList 中移除文件
+                         console.log('文件移除:', file, fileList);
+                         // 您可能需要根据文件的唯一标识来从fileList中找到并移除
+                         const index = this.fileList.findIndex(item => item.id === file.id); // 假设文件对象有id属性
+                         if (index !== -1) {
+                            this.fileList.splice(index, 1);
+                             // 如果需要，这里可以调用后端接口删除服务器上的文件
+                         }
+                    },
+                    // 查看文件方法
+                    handleViewFile(file) {
+                        console.log('查看文件:', file);
+                        // 实现文件查看逻辑，例如新窗口打开文件URL
+                        if (file.url) {
+                            window.open(file.url, '_blank');
+                        } else {
+                             this.$message.warning('文件URL不存在');
+                        }
+                    },
+                    // 删除文件方法
+                    handleDeleteFile(index, file) {
+                        console.log('删除文件:', file);
+                         // 触发表格中的删除操作
+                         this.$confirm('确定删除该文件？', '提示', {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }).then(() => {
+                            // 在这里执行实际删除逻辑，例如调用后端接口
+                            console.log('确认删除文件:', file);
+                            // 模拟删除成功后从列表中移除
+                            this.fileList.splice(index, 1);
+                            this.$message.success('删除成功!');
+                        }).catch(() => {
+                            // 取消删除
+                             this.$message.info('已取消删除');
+                        });
+                    },
+                    handleOptionShow,
+                }
+            })
+        </script>
+    </body>
+</html>

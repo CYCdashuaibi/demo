@@ -1,0 +1,80 @@
+.contract {
+    height: 100%;
+    padding: 8px;
+}
+
+.contract__search_button {
+    margin-top: 20px;
+}
+
+.contract__table {
+    margin-top: 20px;
+}
+.contract__table .el-table .el-table__header th {
+    background-color: #f1f3f6;
+    color: #332827;
+}
+
+.contract__table_pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 8px;
+}
+.contract__table_pagination_info {
+    font-size: 13px;
+    font-weight: 400;
+    color: #606266;
+}
+
+.contract_row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.contract_col_6 {
+    width: 25%;
+    padding: 0 10px;
+}
+.contract_row>.contract_col_6:first-child {
+    padding-left: 0;
+}
+.contract_row>.contract_col_6:last-child {
+    padding-left: 0;
+}
+
+.contract__archive_upload .el-upload,
+.contract__archive_upload .el-upload .el-upload-dragger {
+    width: 100%;
+    height: fit-content;
+}
+.contract__archive_upload .el-upload .el-upload-dragger {
+    padding: 10px 0;
+}
+
+.contract__download .el-dialog__body {
+    padding: 18px 16px;
+}
+.contract__download_item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #332827;
+    cursor: pointer;
+    padding: 5px 6px;
+    border-radius: 5px;
+}
+.contract__download_item:hover {
+    color: #409eff;
+    background-color: #f1f3f6;
+}
+.contract__download_item_name {
+    flex: 1 0 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 28px);
+}
+.contract__download_item_download {
+    width: 20px;
+}
