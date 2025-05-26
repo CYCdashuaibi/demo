@@ -292,21 +292,20 @@
                     }
                 },
                 created() {
-                    // TODO: 
-                    // const query = this.$route.query;
-                    // this.routeQuery = query;
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const id = urlParams.get('id'); // "123"
+                    const pageType = urlParams.get('pageType'); // "abc"
                     this.routeQuery = {
-                        pageType: VIEW_SCENE.ADD,
-                        id: 4,
+                        pageType,
+                        id,
                     };
-                    // document.title = query.pageType;
+                    document.title = pageType;
 
-                    // if (query.pageType === VIEW_SCENE.ADD) {
-                    if (false) {
+                    if (pageType === VIEW_SCENE.ADD) {
                         this.getPersonInfo();
                         this.getCompanySubject();
                         this.queryContractList();
-                    } else{
+                    } else if (id) {
                         this.getContractSupplierDetail();
                     }
                 },
@@ -471,6 +470,7 @@
                                                 window.opener.contractListApp.getList(true);
                                             }
                                             this.$message.success("新增成功");
+                                            this.close();
                                         }
                                     },
                                     complete: () => {
@@ -484,6 +484,9 @@
                         });
                     },
                     onAudit(value) {
+                        if (!this.routeQuery.id) {
+                            this.$message.error('路由参数错误');
+                        }
                         this.submitLoading = true;
                         if (value === 1) {
                             this.$confirm('确定通过审核？', '提示', {
@@ -511,7 +514,7 @@
                                                 window.opener.contractListApp.getList(true);
                                             }
                                             this.$message.success("审核成功");
-                                            // TODO: 关闭页面
+                                            this.close();
                                         }
                                     },
                                     complete: () => {
@@ -548,7 +551,7 @@
                                     }
                                     this.$message.success("审核成功");
                                     this.notPassReasonVisible = false;
-                                    // TODO: 关闭页面
+                                    this.close();
                                 }
                             },
                             complete: () => {
@@ -595,7 +598,6 @@
                         });
                     },
                     handleDownloadFile(item) {
-                        console.log(item);
                         downloadFileFromUrl(`${FILE_BASE_URL}\\${item.name}`, item.name)   
                     },
                     handleOptionShow,

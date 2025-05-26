@@ -286,18 +286,18 @@
 					},
 					toAudit(item) {
 						// TODO: 
-						// window.open(`./contractView?id=${item.id}&pageType=${VIEW_SCENE.AUDIT}`);
-						window.open(`./contractView.html`);
+						// window.location.replace(`./contractView?id=${item.id}&pageType=${VIEW_SCENE.AUDIT}`);
+						window.location.replace(`./contractView.html?id=${item.id}&pageType=${VIEW_SCENE.AUDIT}`);
 					},
 					toDetail(item) {
 						// TODO: 
-						// window.open(`./contractView?id=${item.id}&pageType=${VIEW_SCENE.VIEW}`);
-						window.open(`./contractView.html`);
+						// window.location.replace(`./contractView?id=${item.id}&pageType=${VIEW_SCENE.VIEW}`);
+						window.location.replace(`./contractView.html?id=${item.id}&pageType=${VIEW_SCENE.VIEW}`);
 					},
 					toAdd() {
 						// TODO: 
-						// window.open(`./contractView?pageType=${VIEW_SCENE.ADD}`);
-						window.open(`./contractView.html`);
+						// window.location.replace(`./contractView?pageType=${VIEW_SCENE.ADD}`);
+						window.location.replace(`./contractView.html?pageType=${VIEW_SCENE.ADD}`);
 					},
 					toProcess(item) {
 						// TODO
@@ -367,7 +367,6 @@
 					}
 				},
 			});
-		
 		</script>
 	</body>
 </html>
