@@ -252,6 +252,8 @@
 								...this.searchForm,
 							}),
 							success: (res) => {
+								console.log(res);
+								
 								if(res.code === SUCCESS_CODE){
 									let { count, list } = res.data;
 									this.contractList = list || [];
