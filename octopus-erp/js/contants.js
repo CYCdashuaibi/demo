@@ -28,3 +28,9 @@ export const CONTRACT_STATUS_OPTIONS = [
     { value: '2', label: '已归档' },
     { value: '3', label: '审核不通过' },
 ];
+
+// 合同来源
+export const CONTRACT_SOURCE_OPTIONS = [
+    { value: '1', label: '标准合同' },
+    { value: '2', label: '客户合同' },
+];
