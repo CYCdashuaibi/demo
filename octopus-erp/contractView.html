@@ -155,7 +155,7 @@
                 </div>
                 <div class="contractView__card_content">
                     <!-- 文件列表表格 -->
-                    <el-table :data="attachFile" style="width: 100%; margin-bottom: 10px;" size="mini">
+                    <el-table :data="attachFileList" style="width: 100%; margin-bottom: 10px;" size="mini">
                         <el-table-column
                             label="文件"
                             prop="name"> <!-- 文件名属性 -->
@@ -166,7 +166,7 @@
                             v-if="routeQuery.pageType  !== VIEW_SCENE.VIEW"
                         >
                             <template slot-scope="scope">
-                                <el-button @click="handleViewFile(scope.row)" type="text" size="small">下载</el-button>
+                                <el-button @click="handleDownloadFile(scope.row)" type="text" size="small">下载</el-button>
                                 <el-button @click="handleDeleteFile(scope.row)" type="text" size="small">删除</el-button>
                             </template>
                         </el-table-column>
@@ -178,7 +178,7 @@
                             ref="uploadRef"
                             multiple
                             :auto-upload="false"
-                            :file-list="attachFile"
+                            :file-list="attachFileList"
                             :on-change="handleFileChange"
                             :show-file-list="false"
                             drag
@@ -192,7 +192,7 @@
             </div>
 
             <div class="contractView__footer">
-                <el-button type="default" @click="$router.back()" :loading="submitLoading" size="mini">{{routeQuery.pageType === VIEW_SCENE.VIEW ? '关闭' : '取消'}}</el-button>
+                <el-button type="default" @click="close" :loading="submitLoading" size="mini">{{routeQuery.pageType === VIEW_SCENE.VIEW ? '关闭' : '取消'}}</el-button>
                 <el-button type="danger" @click="onAudit(0)" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.AUDIT">审批不通过</el-button>
                 <el-button type="primary" @click="onAudit(1)" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.AUDIT">审批通过</el-button>
                 <el-button type="primary" @click="onAdd" :loading="submitLoading" size="mini" v-if="routeQuery.pageType === VIEW_SCENE.ADD">确定</el-button>
@@ -213,9 +213,9 @@
         </div>
 
         <script type="module">
-			import { opUrl, VIEW_SCENE, CONTRACT_TYPE_OPTIONS, CONTRACT_SOURCE_OPTIONS, SUCCESS_CODE } from './js/contants.js';
+			import { opUrl, VIEW_SCENE, CONTRACT_TYPE_OPTIONS, CONTRACT_SOURCE_OPTIONS, SUCCESS_CODE, FILE_BASE_URL } from './js/contants.js';
             import { getPersonInfoApi, getCompanySubjectApi, queryContractListApi, contractSupplierAddApi, contractSupplierAuditeApi, contractSupplierDetailApi, fileUpLoadApi, contractSupplierNotPassApi } from './js/apis.js';
-            import { handleOptionShow  } from './js/fn.js';
+            import { handleOptionShow, downloadFileFromUrl } from './js/fn.js';
 
             let app = new Vue({
                 el: '#contractView',
@@ -280,7 +280,7 @@
                         },
                         submitLoading: false,
                         // 附件列表数据，根据需要添加，结构应包含 name, url/id 等
-                        attachFile: [],
+                        attachFileList: [],
                         routeQuery: {},
                         formDisabled: true,
                         personInfo: {},
@@ -296,7 +296,7 @@
                     // const query = this.$route.query;
                     // this.routeQuery = query;
                     this.routeQuery = {
-                        pageType: VIEW_SCENE.VIEW,
+                        pageType: VIEW_SCENE.ADD,
                         id: 4,
                     };
                     // document.title = query.pageType;
@@ -311,6 +311,10 @@
                     }
                 },
                 methods: {
+                    close() {
+                        // TODO
+                        window.location.replace('./contractList.html');
+                    },
                     getPersonInfo() {
                         this.personInfoLoading = false;
 						$.ajax({
@@ -411,7 +415,7 @@
                                         specialProvisions: customerContractEntity.specialProvisions,
                                     };
                                     // // 填充附件列表
-                                    this.attachFile = (customerContractEntity.attachFile || []).map(item => ({ name: item, uid: item }));
+                                    this.attachFileList = (customerContractEntity.attachFileList || []).map(item => ({ name: item, uid: item }));
 								}
 							},
                             complete: () => {                                
@@ -437,7 +441,7 @@
                             traceabilityClause: '',
                             specialProvisions: '',
                         };
-                        this.attachFile = [];
+                        this.attachFileList = [];
 
                         // 如果使用 Element UI 的表单组件，还可以调用其 resetFields 方法
                         this.$refs.form.resetFields();
@@ -455,7 +459,7 @@
                                     data: JSON.stringify({
                                         ...this.baseInfo,
                                         ...this.termsRules,
-                                        attachFile: (this.attachFile || []).map(item => item.name),
+                                        attachFileList: (this.attachFileList || []).map(item => item.name),
                                         contractBeginTime: this.baseInfo.dateRange?.[0],
                                         beginEndTime: this.baseInfo.dateRange?.[1],
                                     }),
@@ -494,7 +498,7 @@
                                     data: JSON.stringify({
                                         ...this.baseInfo,
                                         ...this.termsRules,
-                                        attachFile: (this.attachFile || []).map(item => item.name),
+                                        attachFileList: (this.attachFileList || []).map(item => item.name),
                                         contractBeginTime: this.baseInfo.dateRange?.[0],
                                         beginEndTime: this.baseInfo.dateRange?.[1],
                                         id: this.routeQuery.id,
@@ -523,6 +527,9 @@
                         }
                     },
                     notPass() {
+                        if (!this.notPassReason) {
+                            this.$message.error('请填写不通过原因');
+                        }
                         $.ajax({
                             url: contractSupplierNotPassApi,
                             type: "post",
@@ -571,7 +578,7 @@
                             processData: false,
                             success: (res) => {
                                 this.$message?.success(`文件 ${file.name} 上传成功`);
-                                this.attachFile.push({ name: res.filePath, uid: file.uid });
+                                this.attachFileList.push({ name: res.filePath, uid: file.uid });
                             },
                             error: function (err) {
                                 console.error('上传失败', err);
@@ -584,8 +591,12 @@
                             confirmButtonText: '确定',
                             cancelButtonText: '取消',
                         }).then(() => {
-                            this.attachFile = this.attachFile.filter(file => file.uid !== item.uid);
+                            this.attachFileList = this.attachFileList.filter(file => file.uid !== item.uid);
                         });
+                    },
+                    handleDownloadFile(item) {
+                        console.log(item);
+                        downloadFileFromUrl(`${FILE_BASE_URL}\\${item.name}`, item.name)   
                     },
                     handleOptionShow,
                 }

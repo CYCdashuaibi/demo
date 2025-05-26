@@ -20,6 +20,9 @@ export const contractSupplierAuditeApi = "/octopus/portal/erp/contractSupplier/a
 // 审核不通过
 export const contractSupplierNotPassApi = "/octopus/portal/erp/contractSupplier/notPass";
 
+// 归档
+export const contractSupplierPlaceContractApi = "/octopus/portal/erp/contractSupplier/placeContract";
+
 // 合同详情
 export const contractSupplierDetailApi = "/octopus/portal/erp/contractSupplier/details";
 

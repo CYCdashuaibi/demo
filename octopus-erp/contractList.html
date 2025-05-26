@@ -136,17 +136,18 @@
 				<el-upload
 					class="contract__archive_upload"
 					multiple
-					:file-list="archiveFileList"
-					:archiveFileList="archiveFileList"
-					:on-success="handleUploadSuccess"
+					:auto-upload="false"
+					:file-list="placeFileList"
+					:placeFileList="placeFileList"
+					:on-change="handleFileChange"
 					:on-remove="handleRemoveFile"
 					drag
 				>
 					<span size="small" type="primary"><i class="el-icon-plus"></i>上传电子版完整合同</span>
 				</el-upload>
 				<span slot="footer" class="dialog-footer">
-					<el-button @click="archiveVisible = false" size="mini">取 消</el-button>
-					<el-button type="primary" @click="archiveVisible = false" size="mini">确 定</el-button>
+					<el-button @click="archiveVisible = false; placeFileList = [];" size="mini" :loading="archiveLoading">取 消</el-button>
+					<el-button type="primary" @click="contractSupplierPlaceContract" size="mini" :loading="archiveLoading">确 定</el-button>
 				</span>
 			</el-dialog>
 
@@ -166,8 +167,6 @@
 							<i class="el-icon-download"></i>
 						</div>
 					</div>
-				</div>
-				<div class="contract__download_list">
 					<div class="contract__download_item">
 						<div class="contract__download_item_name">
 							文件名
@@ -184,9 +183,8 @@
 			// let opUrl = ctx;
 			// let opUrl = 'http://newdev2.ejcop.com:1081/octopus';
 			import { VIEW_SCENE, SUCCESS_CODE, CONTRACT_TYPE_OPTIONS, CONTRACT_STATUS_OPTIONS } from './js/contants.js';
-			import { contractSupplierListApi } from './js/apis.js';
+			import { contractSupplierListApi, contractSupplierPlaceContractApi, fileUpLoadApi } from './js/apis.js';
 			import  { debounce, handleOptionShow } from './js/fn.js';
-
 
 			window.contractListApp = new Vue({
 				el: "#contract",
@@ -208,7 +206,9 @@
 						contractList: [],
 						tableHeight: '',
 						archiveVisible: false,
-						archiveFileList: [],
+						archiveId: null,
+						archiveLoading: false,
+						placeFileList: [],
 						downloadContractVisible: false,
 					};
 				},
@@ -280,8 +280,9 @@
 						this.pager.pageNo = val;
 						this.getList();
 					},
-					beforeArchive() {
+					beforeArchive(item) {
 						this.archiveVisible = true;
+						this.archiveId = item.id;
 					},
 					toAudit(item) {
 						// TODO: 
@@ -301,32 +302,68 @@
 					toProcess(item) {
 						// TODO
 					},
-					// 文件上传成功时的钩子
-					handleUploadSuccess(response, file, fileList) {
-                         // 处理上传成功后的逻辑，例如将文件信息添加到 fileList 中
-                        console.log('文件上传成功:', response, file, fileList);
-                        // 示例：假设response包含文件信息，根据实际后端返回调整
-                        if (response && response.code === '0000' && response.data) {
-                            this.fileList.push({
-                                name: response.data.fileName,
-                                url: response.data.fileUrl, // 或其他标识文件的属性
-                                id: response.data.fileId // 或其他唯一标识
-                            });
-                        }
-                    },
+					async handleFileChange(file) {
+						// 拼接 guid = 文件名 + 当前时间戳
+                        const timestamp = Date.now();
+                        const guid = `${timestamp}_${file.name}`;
+
+                        // 创建 FormData 对象，按照后端需求构造字段
+                        const formData = new FormData();
+                        formData.append('guid', guid);
+                        formData.append('_contract', file.raw);
+                        formData.append('uploadFileName', '_contract');
+
+                        $.ajax({
+                            url: fileUpLoadApi,
+                            type: 'POST',
+                            data: formData,
+                            contentType: false,
+                            processData: false,
+                            success: (res) => {
+                                this.$message?.success(`文件 ${file.name} 上传成功`);
+                                this.placeFileList.push({ name: res.filePath, uid: file.uid });
+                            },
+                            error: function (err) {
+                                this.$message?.error(`文件 ${file.name} 上传失败`);
+                            }
+                        });
+					},
                     // 文件列表移除文件时的钩子
                     handleRemoveFile(file, fileList) {
-                         // 处理文件移除逻辑，例如从 fileList 中移除文件
-                         console.log('文件移除:', file, fileList);
-                         // 您可能需要根据文件的唯一标识来从fileList中找到并移除
-                         const index = this.fileList.findIndex(item => item.id === file.id); // 假设文件对象有id属性
-                         if (index !== -1) {
-                            this.fileList.splice(index, 1);
-                             // 如果需要，这里可以调用后端接口删除服务器上的文件
-                         }
+						this.placeFileList = fileList;
                     },
 					beforeDownloadContract() {
 						this.downloadContractVisible = true;
+					},
+					contractSupplierPlaceContract() {
+						if (!this.placeFileList.length) {
+							this.$message.error('请上传完整电子合同');
+						}
+						this.archiveLoading = true;
+						$.ajax({
+                            url: contractSupplierPlaceContractApi,
+                            type: "post",
+                            dataType: "json",
+                            contentType: "application/json",
+                            data: JSON.stringify({
+                                id: this.archiveId,
+                                placeFileList: this.placeFileList.map(item => item.name),
+                            }),
+                            success: (res) => {
+                                if(res.code === SUCCESS_CODE) {
+                                    this.getList(true);
+                                    this.$message.success("归档成功");
+                                    this.archiveVisible = false;
+									this.placeFileList = [];
+                                }
+                            },
+                            complete: () => {
+                                this.archiveLoading = false;
+                            },
+                            error: () => {
+                                this.$message.error("归档失败");
+                            }
+                        });
 					}
 				},
 			});
