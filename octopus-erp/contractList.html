@@ -7,14 +7,16 @@
 
 
 		<!-- Vue.js -->
-		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script>
+		<!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script> -->
+		<script src="./lib/vue@2.6.11.min.js"></script>
 		<!-- Element UI -->
-		<link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css">
-		<script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
-		<!-- dayjs -->
-		<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css" /> -->
+		<link rel="stylesheet" href="./lib/element-ui@2.15.14-index.css" />
+		<!-- <script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script> -->
+		<script src="./lib/element-ui@2.15.14-index.js"></script>
 		<!-- jquery -->
-		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+		<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+		<script src="./lib/jquery-3.6.0.min.js"></script>
 
 		<link rel="stylesheet" href="./css/reset.css">
 		<link rel="stylesheet" href="./css/contractList.css">
@@ -27,7 +29,7 @@
 				<div class="contract__search_form">
 					<div class="contract_row">
 						<div class="contract_col_6">
-							<el-select size="mini" v-model="searchForm.supplierName" placeholder="请输入供应商名称" :loading="supplierOptionsLoading" filterable style="width: 100%;">
+							<el-select v-model="searchForm.supplierId" size="mini" placeholder="请输入供应商名称" :loading="supplierOptionsLoading" filterable clearable style="width: 100%;">
 								<el-option
 									v-for="item in supplierOptions"
 									:key="item.value"
@@ -38,7 +40,7 @@
 							</el-select>
 						</div>
 						<div class="contract_col_6">
-							<el-select v-model="searchForm.contractStatus" size="mini" placeholder="请选择合同状态" style="width: 100%;">
+							<el-select v-model="searchForm.contractStatus" size="mini" placeholder="请选择合同状态" filterable clearable style="width: 100%;">
 								<el-option
 									v-for="item in CONTRACT_STATUS_OPTIONS"
 									:key="item.value"
@@ -48,9 +50,9 @@
 								</el-option>
 							</el-select>
 						</div>
-						<div class="contract_col_6">
+						<!-- <div class="contract_col_6">
 							<el-input size="mini" v-model="searchForm.businessOperator" placeholder="请输入商务负责人" />
-						</div>
+						</div> -->
 					</div>
 				</div>
 				<div class="contract__search_button">
@@ -74,9 +76,9 @@
 						<el-table-column label="供应商名称" width="230" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.supplierName }}</template>
 						</el-table-column>
-						<el-table-column label="商务负责人" width="120" show-overflow-tooltip>
+						<!-- <el-table-column label="商务负责人" width="120" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.businessOperator }}</template>
-						</el-table-column>
+						</el-table-column> -->
 						<el-table-column label="合同编码" width="100" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.contractCode }}</template>
 						</el-table-column>
@@ -186,7 +188,7 @@
 			// let opUrl = ctx;
 			// let opUrl = 'http://newdev2.ejcop.com:1081/octopus';
 			import { VIEW_SCENE, SUCCESS_CODE, CONTRACT_TYPE_OPTIONS, CONTRACT_STATUS_OPTIONS } from './js/contants.js';
-			import { contractSupplierListApi, contractSupplierPlaceContractApi, fileUpLoadApi, getContractFilesApi, queryContractListApi } from './js/apis.js';
+			import { contractSupplierListApi, contractSupplierPlaceContractApi, fileUpLoadApi, getContractFilesApi, queryContractListApi, getDownloadPlaceFileApi } from './js/apis.js';
 			import  { debounce, handleOptionShow, downloadFileFromUrl } from './js/fn.js';
 
 			window.contractListApp = new Vue({
@@ -196,7 +198,7 @@
 						CONTRACT_TYPE_OPTIONS,
 						CONTRACT_STATUS_OPTIONS,
 						searchForm: {
-							supplierName: "",
+							supplierId: "",
 							contractStatus: "",
 							businessOperator: "",
 						},
@@ -242,11 +244,11 @@
 						const tableContentHeight = this.$refs.tableContentRef?.offsetHeight || 0;
 						this.tableHeight = contractHeight - searchHeight - paginationHeight - 30;
 					},
-					getList(isInit) {
-						if(isInit){
+					getList(isInit) {						
+						if(isInit) {
 							this.pager.pageNo = 1;
 						}
-						if(this.pager.loading){
+						if(this.pager.loading) {
 							return;
 						}
 						this.pager.loading = true;
@@ -293,8 +295,8 @@
 						});
                     },
 					reset() {
-						this.searchForm =  {
-							supplierName: "",
+						this.searchForm = {
+							supplierId: "",
 							contractStatus: "",
 							businessOperator: "",
 						}
@@ -365,30 +367,30 @@
 						this.downloadContractFileListLoading = true; // 开始加载
 
 						// 调用获取文件列表的API
-						// $.ajax({
-						// 	url: getContractFilesApi, // 替换为实际的API接口
-						// 	type: "post",
-						// 	dataType: "json",
-						// 	contentType: "application/json",
-						// 	data: JSON.stringify({
-                        //         id: item.id,
-                        //     }),
-						// 	success: (res) => {
-						// 		if(res.code === SUCCESS_CODE){
-                        //             this.downloadContractFileList = res.data || [];
-						// 		} else {
-						// 			this.downloadContractFileList = []; // 获取失败时清空列表
-                        //             this.$message.error("获取合同文件失败");
-						// 		}
-						// 	},
-                        //     error: () => {
-                        //         this.downloadContractFileList = [];
-                        //         this.$message.error("获取合同文件失败");
-                        //     },
-						// 	complete: () => {                                
-						// 		this.downloadContractFileListLoading = false;
-						// 	}
-						// });
+						$.ajax({
+							url: getDownloadPlaceFileApi,
+							type: "post",
+							dataType: "json",
+							contentType: "application/json",
+							data: JSON.stringify({
+                                id: item.id,
+                            }),
+							success: (res) => {
+								if(res.code === SUCCESS_CODE){
+                                    this.downloadContractFileList = res.data || [];
+								} else {
+									this.downloadContractFileList = [];
+                                    this.$message.error("获取合同文件失败");
+								}
+							},
+                            error: () => {
+                                this.downloadContractFileList = [];
+                                this.$message.error("获取合同文件失败");
+                            },
+							complete: () => {                                
+								this.downloadContractFileListLoading = false;
+							}
+						});
 					},
 					contractSupplierPlaceContract() {
 						if (!this.placeFileList.length) {
