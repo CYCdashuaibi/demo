@@ -59,11 +59,11 @@
 			<!-- 表格区域 -->
 			<div class="contract__table">
 				<div class="contract__table_content" ref="tableContentRef">
-					<el-table :data="contractList" tooltip-effect="dark" size="mini" v-loading="pager.loading" :height="tableHeight">
+					<el-table :data="contractList" tooltip-effect="dark" size="mini" v-loading="pager.loading" :height="tableHeight || {}">
 						<el-table-column label="供应商id" width="80" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.supplierId }}</template>
 						</el-table-column>
-						<el-table-column label="供应商名称" width="200" show-overflow-tooltip>
+						<el-table-column label="供应商名称" width="230" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.supplierName }}</template>
 						</el-table-column>
 						<el-table-column label="商务负责人" width="120" show-overflow-tooltip>
@@ -75,7 +75,7 @@
 						<el-table-column label="合同名称" width="200" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.contractName }}</template>
 						</el-table-column>
-						<el-table-column label="合同主体" width="120" show-overflow-tooltip>
+						<el-table-column label="合同主体" width="200" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.contractSubjectName }}</template>
 						</el-table-column>
 						<el-table-column label="合同类型" width="120" show-overflow-tooltip>
@@ -87,11 +87,11 @@
 						<el-table-column label="提交时间" width="150" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.createTime }}</template>
 						</el-table-column>
-						<el-table-column label="审核人" width="120" show-overflow-tooltip>
-							<template slot-scope="scope">{{ scope.row.createTime }}</template>
+						<el-table-column label="申请人" width="120" show-overflow-tooltip>
+							<template slot-scope="scope">{{ scope.row.applier }}</template>
 						</el-table-column>
 						<el-table-column label="审核时间" width="150" show-overflow-tooltip>
-							<template slot-scope="scope">{{ scope.row.auditeTime }}</template>
+							<template slot-scope="scope">{{ scope.row.updateTime }}</template>
 						</el-table-column>
 						<el-table-column label="合同状态" width="100" show-overflow-tooltip>
 							<template slot-scope="scope">{{ handleOptionShow(CONTRACT_STATUS_OPTIONS, scope.row.contractStatus) }}</template>
@@ -157,25 +157,20 @@
 				:visible.sync="downloadContractVisible"
 				width="40%"
 				class="contract__download"
+				v-loading="downloadContractFileListLoading"
+				element-loading-text="加载中..."
 			>
-				<div class="contract__download_list">
-					<div class="contract__download_item">
+				<div class="contract__download_list" v-if="downloadContractFileList.length">
+					<div class="contract__download_item" v-for="item in downloadContractFileList" :key="item" @click="handleDownloadContract(item)">
 						<div class="contract__download_item_name">
-							文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名文件名
-						</div>
-						<div class="contract__download_item_download">
-							<i class="el-icon-download"></i>
-						</div>
-					</div>
-					<div class="contract__download_item">
-						<div class="contract__download_item_name">
-							文件名
+							{{item}}
 						</div>
 						<div class="contract__download_item_download">
 							<i class="el-icon-download"></i>
 						</div>
 					</div>
 				</div>
+				<el-empty description="暂无合同文件可下载" v-else></el-empty>
 			</el-dialog>
 		</div>
 
@@ -183,8 +178,8 @@
 			// let opUrl = ctx;
 			// let opUrl = 'http://newdev2.ejcop.com:1081/octopus';
 			import { VIEW_SCENE, SUCCESS_CODE, CONTRACT_TYPE_OPTIONS, CONTRACT_STATUS_OPTIONS } from './js/contants.js';
-			import { contractSupplierListApi, contractSupplierPlaceContractApi, fileUpLoadApi } from './js/apis.js';
-			import  { debounce, handleOptionShow } from './js/fn.js';
+			import { contractSupplierListApi, contractSupplierPlaceContractApi, fileUpLoadApi, getContractFilesApi } from './js/apis.js';
+			import  { debounce, handleOptionShow, downloadFileFromUrl } from './js/fn.js';
 
 			window.contractListApp = new Vue({
 				el: "#contract",
@@ -210,6 +205,8 @@
 						archiveLoading: false,
 						placeFileList: [],
 						downloadContractVisible: false,
+						downloadContractFileList: [],
+						downloadContractFileListLoading: true,
 					};
 				},
 				created() {
@@ -332,8 +329,35 @@
                     handleRemoveFile(file, fileList) {
 						this.placeFileList = fileList;
                     },
-					beforeDownloadContract() {
+					beforeDownloadContract(item) {
 						this.downloadContractVisible = true;
+						this.downloadContractFileListLoading = true; // 开始加载
+
+						// 调用获取文件列表的API
+						// $.ajax({
+						// 	url: getContractFilesApi, // 替换为实际的API接口
+						// 	type: "post",
+						// 	dataType: "json",
+						// 	contentType: "application/json",
+						// 	data: JSON.stringify({
+                        //         id: item.id,
+                        //     }),
+						// 	success: (res) => {
+						// 		if(res.code === SUCCESS_CODE){
+                        //             this.downloadContractFileList = res.data || [];
+						// 		} else {
+						// 			this.downloadContractFileList = []; // 获取失败时清空列表
+                        //             this.$message.error("获取合同文件失败");
+						// 		}
+						// 	},
+                        //     error: () => {
+                        //         this.downloadContractFileList = [];
+                        //         this.$message.error("获取合同文件失败");
+                        //     },
+						// 	complete: () => {                                
+						// 		this.downloadContractFileListLoading = false;
+						// 	}
+						// });
 					},
 					contractSupplierPlaceContract() {
 						if (!this.placeFileList.length) {
@@ -364,7 +388,10 @@
                                 this.$message.error("归档失败");
                             }
                         });
-					}
+					},
+					handleDownloadContract(item) {
+						downloadFileFromUrl(item, item);
+					},
 				},
 			});
 		</script>

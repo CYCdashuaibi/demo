@@ -28,3 +28,6 @@ export const contractSupplierDetailApi = "/octopus/portal/erp/contractSupplier/d
 
 // 上传附件
 export const fileUpLoadApi = "octopus/portal/erp/contractSupplier/fileUpLoad";
+
+// 获取完整合同
+export const getContractFilesApi = "octopus/portal/erp/contractSupplier/getContractFiles";

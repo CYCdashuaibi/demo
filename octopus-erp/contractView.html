@@ -470,7 +470,7 @@
                                                 window.opener.contractListApp.getList(true);
                                             }
                                             this.$message.success("新增成功");
-                                            this.close();
+                                            // this.close();
                                         }
                                     },
                                     complete: () => {
@@ -598,7 +598,7 @@
                         });
                     },
                     handleDownloadFile(item) {
-                        downloadFileFromUrl(`${FILE_BASE_URL}\\${item.name}`, item.name)   
+                        downloadFileFromUrl(item.name, item.name)   
                     },
                     handleOptionShow,
                 }
