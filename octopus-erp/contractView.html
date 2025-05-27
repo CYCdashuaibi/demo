@@ -48,7 +48,6 @@
                             <el-col :span="8">
                                 <el-form-item label="供应商名称" prop="supplierId">
                                     <el-select v-model="baseInfo.supplierId" placeholder="请选择供应商名称" :loading="supplierOptionsLoading" style="width: 100%;" :disabled="routeQuery.pageType  !== VIEW_SCENE.ADD" filterable>
-                                      <!-- 供应商名称选项，根据实际情况动态填充 -->
                                         <el-option
                                             v-for="item in supplierOptions"
                                             :key="item.value"

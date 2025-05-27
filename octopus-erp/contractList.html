@@ -27,7 +27,15 @@
 				<div class="contract__search_form">
 					<div class="contract_row">
 						<div class="contract_col_6">
-							<el-input size="mini" v-model="searchForm.supplierName" placeholder="请输入供应商名称" />
+							<el-select size="mini" v-model="searchForm.supplierName" placeholder="请输入供应商名称" :loading="supplierOptionsLoading" filterable style="width: 100%;">
+								<el-option
+									v-for="item in supplierOptions"
+									:key="item.value"
+									:label="item.label"
+									:value="item.value"
+								>
+								</el-option>
+							</el-select>
 						</div>
 						<div class="contract_col_6">
 							<el-select v-model="searchForm.contractStatus" size="mini" placeholder="请选择合同状态" style="width: 100%;">
@@ -178,7 +186,7 @@
 			// let opUrl = ctx;
 			// let opUrl = 'http://newdev2.ejcop.com:1081/octopus';
 			import { VIEW_SCENE, SUCCESS_CODE, CONTRACT_TYPE_OPTIONS, CONTRACT_STATUS_OPTIONS } from './js/contants.js';
-			import { contractSupplierListApi, contractSupplierPlaceContractApi, fileUpLoadApi, getContractFilesApi } from './js/apis.js';
+			import { contractSupplierListApi, contractSupplierPlaceContractApi, fileUpLoadApi, getContractFilesApi, queryContractListApi } from './js/apis.js';
 			import  { debounce, handleOptionShow, downloadFileFromUrl } from './js/fn.js';
 
 			window.contractListApp = new Vue({
@@ -207,10 +215,13 @@
 						downloadContractVisible: false,
 						downloadContractFileList: [],
 						downloadContractFileListLoading: true,
+						supplierOptions: [],
+                        supplierOptionsLoading: false,
 					};
 				},
 				created() {
 					this.getList();
+					this.queryContractList();
 				},
 				mounted() {
 					this.debouncedCalculateTableHeight = debounce(this.calculateTableHeight, 100);
@@ -261,6 +272,26 @@
 							}
 						});
 					},
+					queryContractList() {
+                        this.supplierOptionsLoading = true;
+                        $.ajax({
+							url: queryContractListApi,
+							type: "post",
+							dataType: "json",
+							contentType: "application/json",
+							data: JSON.stringify({}),
+							success: (res) => {
+								if(res.code === SUCCESS_CODE){
+                                    const data = res.data?.list || {};
+                                    
+                                    this.supplierOptions = (data || []).map(item => ({ value: item.supplierId, label: item.supplierName }));
+								}
+							},
+                            complete: () => {                                
+								this.supplierOptionsLoading = false;
+							}
+						});
+                    },
 					reset() {
 						this.searchForm =  {
 							supplierName: "",
