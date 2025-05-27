@@ -25,7 +25,7 @@
 		<!-- 页面内容区 -->
 		<div class="contract" id="contract" ref="contractRef" v-cloak>
 			<!-- 搜索区域 -->
-			<div class="contract__search" ref="searchRef">
+			<div class="contract__search" id="contractSearch" ref="searchRef">
 				<div class="contract__search_form">
 					<div class="contract_row">
 						<div class="contract_col_6">
@@ -68,7 +68,7 @@
 
 			<!-- 表格区域 -->
 			<div class="contract__table">
-				<div class="contract__table_content" ref="tableContentRef">
+				<div class="contract__table_content" id="contractTableContent" ref="tableContentRef">
 					<el-table :data="contractList" tooltip-effect="dark" size="mini" v-loading="pager.loading" :height="tableHeight || {}">
 						<el-table-column label="供应商id" width="80" show-overflow-tooltip>
 							<template slot-scope="scope">{{ scope.row.supplierId }}</template>
@@ -120,7 +120,7 @@
 					</el-table>
 				</div>
 
-				<div class="contract__table_pagination" ref="paginationRef">
+				<div class="contract__table_pagination" id="contractTablePagination" ref="paginationRef">
 					<div class="contract__table_pagination_info">
 						共 {{ pager.totalCount }} 条记录&nbsp;&nbsp;&nbsp;第 {{ pager.pageNo }} / {{ Math.ceil(pager.totalCount / pager.pageSize) }} 页
 					</div>
@@ -238,10 +238,13 @@
 				methods: {
 					handleOptionShow,
 					calculateTableHeight() {
-						const contractHeight = this.$refs.contractRef?.offsetHeight || 0;
-						const searchHeight = this.$refs.searchRef?.offsetHeight || 0;
-						const paginationHeight = this.$refs.paginationRef?.offsetHeight || 0;
-						const tableContentHeight = this.$refs.tableContentRef?.offsetHeight || 0;
+						// const contractHeight = this.$refs.contractRef?.offsetHeight || 0;
+						// const searchHeight = this.$refs.searchRef?.offsetHeight || 0;
+						// const paginationHeight = this.$refs.paginationRef?.offsetHeight || 0;
+						// this.tableHeight = contractHeight - searchHeight - paginationHeight - 30;
+						const contractHeight = document.querySelector('#contract')?.offsetHeight || 0;
+						const searchHeight = document.querySelector('#contractSearch')?.offsetHeight || 0;
+						const paginationHeight = document.querySelector('#contractTablePagination')?.offsetHeight || 0;
 						this.tableHeight = contractHeight - searchHeight - paginationHeight - 30;
 					},
 					getList(isInit) {						
